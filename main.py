@@ -8,7 +8,7 @@ e
     e - the number of epochs to run for
 '''
 
-#NOTE: Distortion has random spikes then smooth declines, then random spikes then smooth declines. Possible cause in cluster assignment...
+#NOTE: Seems to be converging really quickly.... Maybe I'm just too suspicious of my code. Only can be really told by visualization I suppose.
 
 import random as rand
 import math
@@ -41,7 +41,7 @@ def randomInit(data, K, iterations=1):
     return centroids
 
 def kmeans(data, centroids, epochs):
-
+    prev_distortions = []
 
     #For every epoch of running:
     for epoch in range(epochs):
@@ -55,25 +55,27 @@ def kmeans(data, centroids, epochs):
         #for every datapoint:
         for point in (data):
             #set a temp min-distance as infinity
-            min_dist = [math.inf] * len(point)
+            min_dist = math.inf
             cluster = None
             #for every centroid:
             for centroid in range(len(centroids)):
                 #determine the distance between the point and this centroid
                 dist = [abs(a - b) for a,b in zip(point,centroids[centroid])]
-                #Is this distance smaller than the minimum distance? If so:
+                #Calculate the euclidean distance between the current centroid and point.
+                euc_dist = 0
                 for coord in range(len(point)):
-                    if (dist[coord] > min_dist[coord]):
-                        break
-                    if (coord == (len(point) - 1)):
-                        cluster = centroid
-                        min_dist = dist[:]
-
+                    euc_dist += dist[coord] ** 2
+                
+                #Is this distance smaller than the minimum distance? If so:
+                euc_dist = math.sqrt(euc_dist)
+                if (euc_dist < min_dist):
                     #Set this point as a member of that cluster
+                    min_dist = euc_dist
                     #Update the minimum distance
-            
+                    cluster = centroid
+
             #Store this datapoint's cluster classification
-            clusters[cluster].append(point)         #Clusters should be reset after every centroid move...
+            clusters[cluster].append(point)
             distortion_data.append(min_dist)
 
         #for every centroid:
@@ -93,11 +95,27 @@ def kmeans(data, centroids, epochs):
         #Print distortion here for debugging purposes.
         distortion = 0
         for dist in distortion_data:
-            cur = [point ** 2 for point in dist]
-            distortion += (sum(cur))
+            cur = dist ** 2
+            distortion += cur
         distortion /= len(distortion_data)
+        prev_distortions.append(distortion)
 
         print("EPOCH", epoch, "DISTORTION:", distortion)
+
+        for i in range(len(prev_distortions)-1, -1, -1):
+            if (i == len(prev_distortions)-1):
+                current = prev_distortions[i]
+                count = 1
+                continue
+            if (prev_distortions[i] == current):
+                count += 1
+            
+        if count == 3:
+            print("CONVERGENCE ACHIEVED")
+            break
+
+            
+
     
     return clusters, distortion
 
