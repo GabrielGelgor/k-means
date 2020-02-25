@@ -8,8 +8,8 @@ e
     e - the number of epochs to run for
 '''
 
-#NOTE: Seems to be converging really quickly.... Maybe I'm just too suspicious of my code. Only can be really told by visualization I suppose.
 
+from matplotlib import pyplot as plt 
 import random as rand
 import math
 #Function to select random starting points based off of the training examples. 
@@ -39,6 +39,45 @@ def randomInit(data, K, iterations=1):
         #add these centroid starting points to the output set of centroid starting points.
         centroids.append(p_mu[:])
     return centroids
+
+def scatterplot2D(clusters, centroids, epoch='end'):
+    #set up graph space
+    x_vec = []
+    y_vec = []
+    plt.style.use('seaborn-whitegrid')
+    plt.subplot(111)
+    ax = plt.gca()
+
+    #for each cluster:
+    for cluster in range(len(clusters)):
+        #for each point in the cluster:
+        for point in clusters[cluster]:
+            #add the x to the x vector
+            x_vec.append(point[0])
+            #add the y to the y vector
+            y_vec.append(point[1])
+        
+        #Plot the cluster, with its label being its cluster name
+        color = next(ax._get_lines.prop_cycler)['color']
+        plt.scatter(x_vec, y_vec, s=5, marker='o', label="cluster '{0}'".format(cluster), cmap='viridis', color=color)
+        x_vec = []
+        y_vec = []
+
+    #for each centroid
+    for point in centroids:
+        #add the x to the x vector
+        x_vec.append(point[0])
+        #add the y to the y vector
+        y_vec.append(point[1])
+
+    #plot the centroids so their progress can be mapped.
+    color = next(ax._get_lines.prop_cycler)['color']
+    plt.scatter(x_vec, y_vec, s=5, marker='o', label="Centroids", cmap='viridis', color=color)
+
+    #Show the plot, save it.
+    plt.title('Clustering post epoch '+str(epoch))
+    plt.savefig('results/epoch'+str(epoch)+'.png')
+    plt.clf()
 
 def kmeans(data, centroids, epochs):
     prev_distortions = []
@@ -113,10 +152,9 @@ def kmeans(data, centroids, epochs):
         if count == 3:
             print("CONVERGENCE ACHIEVED")
             break
-
-            
-
     
+    
+        scatterplot2D(clusters,centroids, epoch)
     return clusters, distortion
 
 
@@ -138,5 +176,3 @@ centroids = randomInit(data, 4)
 
 for i in range (len(centroids)):
     final_clusters.append(kmeans(data,centroids[i], 50))
-
-print(len(final_clusters))
