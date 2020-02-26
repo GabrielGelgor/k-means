@@ -154,7 +154,7 @@ def kmeans(data, centroids, epochs):
             break
     
     
-        scatterplot2D(clusters,centroids, epoch)
+        #scatterplot2D(clusters,centroids, epoch)
     return clusters, distortion
 
 
@@ -166,13 +166,26 @@ J - Distortion value for this run of k-means.
 
 data = []
 final_clusters = []
+distortions = []
 
 with open("dataset_simple.txt") as file:
     for line in file:
         string = line[0:-2]
         data.append([float(i) for i in string.split(',')])
 
-centroids = randomInit(data, 4)
+
+K = int(input("How many clusters would you like to form? "))
+epochs = int(input("How many epochs would you like to run for? "))
+repeat = int(input('How many times would you like to repeat the process (takes best run to avoid local optima)? '))
+
+centroids = randomInit(data, K, repeat)
 
 for i in range (len(centroids)):
-    final_clusters.append(kmeans(data,centroids[i], 50))
+    result = kmeans(data,centroids[i], epochs)
+    final_clusters.append(result[0])
+    distortions.append(result[1])
+
+best_i = distortions.index(min(distortions))
+print("BEST RUN: "+str(best_i),"\nDISTORTION: "+str(distortions[best_i]))
+best = final_clusters[best_i]
+scatterplot2D(best,centroids[best_i],epochs)
